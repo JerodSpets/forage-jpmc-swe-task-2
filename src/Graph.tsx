@@ -13,8 +13,9 @@ interface IProps {
 /**
  * Perspective library adds load to HTMLElement prototype.
  * This interface acts as a wrapper for Typescript compiler.
+ * Extend HTMLElement class to make interface behave like HTML element
  */
-interface PerspectiveViewerElement {
+interface PerspectiveViewerElement extends HTMLElement{
   load: (table: Table) => void,
 }
 
@@ -32,8 +33,24 @@ class Graph extends Component<IProps, {}> {
 
   componentDidMount() {
     // Get element to attach the table from the DOM.
-    const elem: PerspectiveViewerElement = document.getElementsByTagName('perspective-viewer')[0] as unknown as PerspectiveViewerElement;
+    const elem = document.getElementsByTagName('perspective-viewer')[0] as unknown as PerspectiveViewerElement;
 
+    //Makes visualization a line graph
+    elem.setAttribute('view', 'y_line')
+    //Distinguish lines by stock name
+    elem.setAttribute('column-pivots', '["stock"]')
+    //Sets x-line values as time stamps
+    elem.setAttribute('row-pivots', '["timestamp"]')
+    //Sets y-line values as the top ask prices rather than all stock information
+    elem.setAttribute('columns', '["top_ask_price"]')
+    //Combines duplicate data from previous intervals
+    //Averages out top_ask_price and top_bid_price if data has the same stock name
+    //And timestamp
+    elem.setAttribute('aggregates',
+        '{"stock":"distinct count", ' +
+        '"top_ask_price":"avg", ' +
+        '"top_bid_price":"avg", ' +
+        '"timestamp":"distinct count"}')
     const schema = {
       stock: 'string',
       top_ask_price: 'float',

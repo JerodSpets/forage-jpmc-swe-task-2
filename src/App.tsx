@@ -8,6 +8,7 @@ import './App.css';
  */
 interface IState {
   data: ServerRespond[],
+  showGraph: boolean
 }
 
 /**
@@ -22,6 +23,8 @@ class App extends Component<{}, IState> {
       // data saves the server responds.
       // We use this state to parse data down to the child element (Graph) as element property
       data: [],
+      //Initial State of Graph is false till user presses button to stream data
+      showGraph: false
     };
   }
 
@@ -29,18 +32,39 @@ class App extends Component<{}, IState> {
    * Render Graph react component with state.data parse as property data
    */
   renderGraph() {
-    return (<Graph data={this.state.data}/>)
+    //Renders graph if the state is true/user has pressed streaming data button
+    if(this.state.showGraph) {
+      return (<Graph data={this.state.data}/>)
+    }
   }
 
   /**
    * Get new data from server and update the state with the new data
    */
   getDataFromServer() {
-    DataStreamer.getData((serverResponds: ServerRespond[]) => {
+    //counter for interval
+    let i = 0
+    //interval constructor
+    const interval = setInterval(() => {
+      DataStreamer.getData((serverResponds: ServerRespond[]) => {
       // Update the state by creating a new array of data that consists of
-      // Previous data in the state and the new data from server
-      this.setState({ data: [...this.state.data, ...serverResponds] });
-    });
+      // A combination of previous data in the state and the new data from server
+      // Without duplicating data
+        this.setState({
+          data: serverResponds,
+          showGraph: true
+        });
+      });
+      //increment counter
+      i++
+      //Once the counter has reached a threshold, stops running the interval
+      //And adding data to graph
+      //Higher threshold allows for more data to be presented
+      if (i > 1000) {
+        clearInterval(interval)
+      }
+      //Delay before data is retrieved again
+    }, 100)
   }
 
   /**
